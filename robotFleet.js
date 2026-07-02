@@ -9,7 +9,7 @@
 const CG_ROBOT_STATE = {
   charging:   { ko: "충전 중",       color: "#2ad0c0" },
   standby:    { ko: "출동 대기",     color: "#ffd166" },
-  moving:     { ko: "순찰 이동",     color: "#4d9aff" },
+  moving:     { ko: "회진 이동",     color: "#4d9aff" },
   scanning:   { ko: "환자 스캔",     color: "#2ad0c0" },
   returning:  { ko: "충전 복귀",     color: "#7c8cff" },
   emergency:  { ko: "긴급 출동",     color: "#ff5d6c" },
@@ -204,7 +204,7 @@ class RobotUnit {
   }
 }
 
-// ---- Fleet Manager: 상태·배터리·충전 큐·순찰 스케줄링·Emergency Dispatch·임무 큐·우선순위 ----
+// ---- Fleet Manager: 상태·배터리·충전 큐·회진 스케줄링·Emergency Dispatch·임무 큐·우선순위 ----
 class FleetManager {
   constructor(o) {
     this.robots = o.robots; this.rooms = o.rooms; this.grid = o.grid; this.docks = o.docks;
@@ -221,14 +221,14 @@ class FleetManager {
   }
   isOnDuty(r) { return this.onDuty[r.team] === r.id; }
   teamMembers(team) { return this.robots.filter((r) => r.team === team); }
-  // 같은 팀 파트너에게 순찰 임무를 인계한다 (배터리 부족으로 근무 로봇이 충전소로 복귀할 때 호출)
-  // 파트너가 대기/충전 중이었다면 그 즉시(다음 tick을 기다리지 않고) 순찰에 투입해 병동 공백을 없앤다.
+  // 같은 팀 파트너에게 회진 임무를 인계한다 (배터리 부족으로 근무 로봇이 충전소로 복귀할 때 호출)
+  // 파트너가 대기/충전 중이었다면 그 즉시(다음 tick을 기다리지 않고) 회진에 투입해 병동 공백을 없앤다.
   handoff(team, now) {
     const cur = this.onDuty[team];
     const next = this.teamMembers(team).find((r) => r.id !== cur);
     if (!next || next.id === cur) return;
     this.onDuty[team] = next.id;
-    this.log("Fleet", next.short + " 교대 투입 · " + (this.robotById(cur) || {}).short + " 순찰 인계", "#ffd166");
+    this.log("Fleet", next.short + " 교대 투입 · " + (this.robotById(cur) || {}).short + " 회진 인계", "#ffd166");
     if (next.state === "standby") {
       this.assignPatrol(next, now);
     } else if ((next.state === "charging" || next.state === "returning") && next.battery >= 25) {
@@ -284,9 +284,9 @@ class FleetManager {
   missionLabel(r) {
     const t = r.task;
     if (r.state === "charging") return "충전 중 (" + Math.round(r.battery) + "%)";
-    if (r.state === "standby") return "순찰 대기";
+    if (r.state === "standby") return "회진 대기";
     if (!t) return "임무 대기";
-    if (t.type === "patrol") return t.roomId + "호 순찰";
+    if (t.type === "patrol") return t.roomId + "호 회진";
     if (t.type === "charge") return "충전소 복귀";
     if (t.type === "emergency") return t.roomId + "호 " + (t.manual ? "수동 파견" : "긴급 출동") + (r.state === "monitoring" ? " · 모니터링" : "");
     return "-";
@@ -295,7 +295,7 @@ class FleetManager {
     const j = r.scanJob; if (!j) return 0;
     return Math.min(100, 100 * ((j.done + (j.phase === "scan" ? Math.min(1, j.tScan / 1.35) : 0)) / j.total));
   }
-  // ---- Patrol Scheduling: 구역 분담 (중복 순찰 없음) + Empty Room Skip (빈 병실은 건너뛴다) ----
+  // ---- Patrol Scheduling: 구역 분담 (중복 회진 없음) + Empty Room Skip (빈 병실은 건너뛴다) ----
   // 팀당 항상 1대만 근무(On-duty)한다 — 근무 로봇이 아니면 자기 Dock에서 충전/대기하며 교대를 기다린다.
   assignPatrol(r, now) {
     if (!this.isOnDuty(r)) {
@@ -307,7 +307,7 @@ class FleetManager {
     for (let tries = 0; tries < r.zone.length; tries++) {
       const cand = this.roomOf(r.zone[r.patrolIdx % r.zone.length]);
       r.patrolIdx++;
-      if (cand && cand.occ > 0) { room = cand; break; }   // 환자가 없는 병실은 순찰 대상에서 제외
+      if (cand && cand.occ > 0) { room = cand; break; }   // 환자가 없는 병실은 회진 대상에서 제외
     }
     if (!room) { r.setState("standby", now); r.standbyUntil = now + 2000; return; }  // 구역 전체가 공실이면 잠시 대기 후 재시도
     r.task = { type: "patrol", roomId: room.id, room };
@@ -360,7 +360,7 @@ class FleetManager {
       Math.hypot(a.pos().x - pt.x, a.pos().z - pt.z) - Math.hypot(b.pos().x - pt.x, b.pos().z - pt.z))[0];
   }
   finishEmergency(r, now, silent) {
-    if (!silent) this.log("Fleet", r.short + " 임무 완료 · 기존 순찰 복귀", "#2ad0c0");
+    if (!silent) this.log("Fleet", r.short + " 임무 완료 · 기존 회진 복귀", "#2ad0c0");
     this.unlockAll(r.id); r.task = null; r.scanJob = null;
     const next = this.missionQueue.shift();
     if (next) { this.assignEmergency(r, next.roomId, next.bedId, next.manual, now); return; }
@@ -438,17 +438,17 @@ class FleetManager {
 
     switch (r.state) {
       case "charging":
-        if (r.battery >= 100) {                             // Battery 100% → Dock 이탈 → 자동 순찰
+        if (r.battery >= 100) {                             // Battery 100% → Dock 이탈 → 자동 회진
           r.battery = 100;
           r.setState("standby", now); r.standbyUntil = now + 1400;
-          this.log("Fleet", r.short + " 충전 완료 · 자동 순찰 시작", "#2ad0c0");
+          this.log("Fleet", r.short + " 충전 완료 · 자동 회진 시작", "#2ad0c0");
         }
         break;
       case "standby":
         if (now >= r.standbyUntil) this.assignPatrol(r, now);
         break;
       case "moving": {
-        // 순찰 이동 중에도(스캔 완료를 기다리지 않고) 배터리가 부족해지면 즉시 충전소로 복귀 + 팀 교대 — 빈틈 최소화
+        // 회진 이동 중에도(스캔 완료를 기다리지 않고) 배터리가 부족해지면 즉시 충전소로 복귀 + 팀 교대 — 빈틈 최소화
         if (r.task && r.task.type === "patrol" && r.battery <= this.LOW) { this.lowBatteryReturn(r, now); break; }
         if (r.move(dt, this.speedFactor(r, now), now).arrived) this.onArrive(r, now);
         break;
@@ -481,7 +481,7 @@ class FleetManager {
           const ow = this.owner();
           if (ow && ow.recordRobotVisit && res.letters && res.letters.length) ow.recordRobotVisit(res.roomId, res.letters, r.short);
           r.task = null;
-          // 20% 이하 → 충전소 복귀 + (근무 중이었다면) 같은 팀 파트너에게 순찰 인계
+          // 20% 이하 → 충전소 복귀 + (근무 중이었다면) 같은 팀 파트너에게 회진 인계
           if (r.battery <= this.LOW) this.lowBatteryReturn(r, now);
           else this.assignPatrol(r, now);
         }
@@ -524,7 +524,7 @@ class FleetManager {
       r.chargeRing.visible = false;
       const home = Math.hypot(r.pos().x - dock.x, r.pos().z - dock.z) < 2.2;
       dock.ring.material.emissiveIntensity = home ? 0.9 : 0.3;
-      dock.setStatus(home ? "대기" : r.short + " 순찰 중", home ? "#ffd166" : "#5a6678");
+      dock.setStatus(home ? "대기" : r.short + " 회진 중", home ? "#ffd166" : "#5a6678");
     }
     // Scan 효과: Scanner Beam(좌/우) + Scan Ring + Pulse + 침대 하이라이트
     const j = r.scanJob;
@@ -567,7 +567,7 @@ class FleetManager {
       return { text: "🤖 " + sc.short + " · " + j.room.id + "호 " + (j.phase === "scan" ? ((j.side === "L" ? "좌측" : "우측") + " 환자 스캔") : "통로 스캔") + " 중 (" + Math.round(this.scanPct(sc)) + "%)", color: "#2ad0c0" };
     }
     const mv = this.robots.find((r) => r.state === "moving" && r.task);
-    if (mv) return { text: "🤖 " + mv.short + " · " + mv.task.roomId + "호로 순찰 이동 중", color: "#4d9aff" };
+    if (mv) return { text: "🤖 " + mv.short + " · " + mv.task.roomId + "호로 회진 이동 중", color: "#4d9aff" };
     const ch = this.robots.filter((r) => r.state === "charging").length;
     return { text: "🤖 Fleet 운영 중 · 충전 " + ch + "대", color: "#8693a8" };
   }
