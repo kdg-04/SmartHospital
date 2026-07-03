@@ -153,3 +153,49 @@ select:hover, input:hover{border-color:rgba(120,160,220,0.35) !important;}
   /* digital-twin floating patient panel → near full width */
   [style*="width: 312px"]{ width: calc(100vw - 32px) !important; }
 }
+
+/* ======================================================================
+   MODALS (full-screen overlays) — Digital Twin & Admin Dashboard.
+   These are desktop control-centre layouts; below ~700px we restructure
+   them into a stacked, scrollable form so nothing overlaps or is clipped.
+   ====================================================================== */
+@media (max-width: 700px){
+
+  /* -------- Digital Twin modal (standalone, z-index 215) -------- */
+  /* header: tighter, title smaller, drop the mono sub-label, no button wrap */
+  [style*="padding: 18px 30px"]{ padding: 12px 14px !important; }
+  [style*="padding: 18px 30px"] span[style*="font-size: 17px"]{ font-size: 13px !important; letter-spacing: 0.4px !important; }
+  [style*="padding: 18px 30px"] span[style*="font-size: 10.5px"]{ display: none !important; }
+  [style*="padding: 18px 30px"] button{ white-space: nowrap !important; padding: 8px 12px !important; }
+  /* bottom HUDs: robot-dispatch → full-width bottom; legend → top-right */
+  [style*="left: 30px"][style*="bottom: 28px"]{
+    left: 12px !important; right: 12px !important; bottom: 12px !important; max-width: none !important;
+  }
+  [style*="right: 30px"][style*="bottom: 28px"]{
+    top: 58px !important; right: 12px !important; bottom: auto !important; left: auto !important;
+    padding: 12px 14px !important;
+  }
+
+  /* -------- Admin Dashboard modal (z-index 216) -------- */
+  /* make the whole overlay a normal, vertically-scrollable stack */
+  [style*="z-index: 216"]{ display: block !important; overflow-y: auto !important; }
+  /* top bar: allow wrapping, keep buttons intact */
+  [style*="padding: 12px 22px"]{ flex-wrap: wrap !important; padding: 10px 14px !important; gap: 8px !important; }
+  [style*="padding: 12px 22px"] > div{ flex-wrap: wrap !important; row-gap: 8px !important; }
+  [style*="padding: 12px 22px"] button{ white-space: nowrap !important; }
+  /* body: sidebar + ward → stacked single column */
+  [style*="grid-template-columns: 230px 1fr"]{ display: block !important; }
+  /* ward canvas holder needs an explicit height (its canvas is absolute) */
+  [style*="position: relative"][style*="min-height: 0px"][style*="background: rgb(7, 10, 17)"]{
+    height: 62vh !important; min-height: 380px !important;
+  }
+  /* bottom control panels: 4-up row → single column, natural height */
+  [style*="grid-template-columns: 1.15fr 1.25fr"]{
+    grid-template-columns: 1fr !important; height: auto !important; gap: 12px !important;
+  }
+  [style*="grid-template-columns: 1.15fr 1.25fr"] > div{ min-height: 200px !important; }
+  /* admin ward robot-control HUD → full width */
+  [style*="left: 18px"][style*="max-width: 330px"]{
+    left: 12px !important; right: 12px !important; max-width: none !important;
+  }
+}
