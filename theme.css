@@ -54,3 +54,85 @@ select:hover, input:hover{border-color:rgba(120,160,220,0.35) !important;}
 [data-reveal].is-visible .cg-roadmap-line{stroke-dashoffset:0;}
 [data-reveal="dot"]{opacity:0;transition:opacity .5s ease;}
 [data-reveal="dot"].is-visible{opacity:1;}
+
+/* ======================================================================
+   RESPONSIVE LAYER — retrofits the inline-styled page for tablet & mobile.
+   The DCLogic runtime re-serialises every inline style to the normalised
+   "prop: value" form (space after ':' and after ',' in functions), so the
+   attribute selectors below match that exact spacing. !important overrides
+   the inline declarations without touching the markup. Widest → narrowest.
+   ====================================================================== */
+
+/* -------------------- TABLET  (≤ 960px) -------------------- */
+@media (max-width: 960px){
+  /* hero: two columns → stack */
+  header[style*="grid-template-columns: 1.05fr 0.95fr"]{
+    grid-template-columns: 1fr !important;
+    gap: 44px !important;
+  }
+  /* feature sections (digital twin / dashboard / emr): two columns → stack */
+  [style*="grid-template-columns: 1fr 1fr"][style*="gap: 56px"]{
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+  }
+  /* card grids */
+  [style*="grid-template-columns: repeat(5, 1fr)"]{ grid-template-columns: repeat(3, 1fr) !important; }
+  [style*="grid-template-columns: repeat(4, 1fr)"]{ grid-template-columns: repeat(2, 1fr) !important; }
+  [style*="grid-template-columns: repeat(3, 1fr)"]{ grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* trim big headings */
+  h1[style*="font-size: 54px"]{ font-size: 42px !important; line-height: 1.2 !important; }
+  [style*="font-size: 38px"]{ font-size: 30px !important; }
+  [style*="font-size: 36px"]{ font-size: 29px !important; }
+  [style*="font-size: 34px"]{ font-size: 27px !important; }
+  [style*="font-size: 32px"]{ font-size: 26px !important; }
+
+  /* section horizontal padding */
+  [style*="padding: 90px 40px"],
+  [style*="padding: 96px 40px"],
+  [style*="padding: 80px 40px 70px"]{
+    padding-left: 32px !important; padding-right: 32px !important;
+  }
+  nav[style*="padding: 26px 40px"]{ padding-left: 28px !important; padding-right: 28px !important; }
+}
+
+/* -------------------- MOBILE  (≤ 600px) -------------------- */
+@media (max-width: 600px){
+  /* nav: shrink + prevent overlap */
+  nav[style*="padding: 26px 40px"]{ padding: 18px 18px !important; }
+  nav[style*="padding: 26px 40px"] > div[style*="gap: 36px"]{ gap: 14px !important; }
+
+  /* compact vertical section padding (generic first, specific overrides after) */
+  [style*="padding: 90px 40px"]{ padding: 52px 20px !important; }
+  [style*="padding: 96px 40px"]{ padding: 52px 20px !important; }
+  [style*="padding: 80px 40px 70px"]{ padding: 48px 20px 44px !important; }
+  [style*="padding: 90px 40px 80px"]{ padding: 52px 20px 44px !important; }
+  [style*="padding: 90px 40px 100px"]{ padding: 52px 20px 60px !important; }
+  header[style*="padding: 54px 40px 90px"]{ padding: 22px 20px 52px !important; }
+
+  /* card grids: densest layout */
+  [style*="grid-template-columns: repeat(5, 1fr)"]{ grid-template-columns: repeat(2, 1fr) !important; }
+  [style*="grid-template-columns: repeat(4, 1fr)"]{ grid-template-columns: repeat(2, 1fr) !important; }
+  [style*="grid-template-columns: repeat(3, 1fr)"]{ grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* headings */
+  h1[style*="font-size: 54px"]{ font-size: 31px !important; line-height: 1.22 !important; margin-bottom: 18px !important; }
+  [style*="font-size: 38px"]{ font-size: 24px !important; }
+  [style*="font-size: 36px"]{ font-size: 23px !important; }
+  [style*="font-size: 34px"]{ font-size: 23px !important; }
+  [style*="font-size: 32px"]{ font-size: 22px !important; }
+  [style*="font-size: 29px"]{ font-size: 22px !important; }
+  [style*="font-size: 26px"]{ font-size: 20px !important; }
+
+  /* hero copy + stat */
+  header p[style*="font-size: 18px"]{ font-size: 15px !important; }
+  header [style*="font-size: 34px"]{ font-size: 27px !important; }
+
+  /* comparison table: keep 3 columns, shrink */
+  [style*="grid-template-columns: 1.1fr 1fr 1fr"]{
+    padding-left: 12px !important; padding-right: 12px !important; font-size: 11px !important;
+  }
+
+  /* digital-twin floating patient panel → near full width */
+  [style*="width: 312px"]{ width: calc(100vw - 32px) !important; }
+}
