@@ -94,6 +94,23 @@ select:hover, input:hover{border-color:rgba(120,160,220,0.35) !important;}
     padding-left: 32px !important; padding-right: 32px !important;
   }
   nav[style*="padding: 26px 40px"]{ padding-left: 28px !important; padding-right: 28px !important; }
+
+  /* 04 · SOLUTION — the 7-node flow has min-width:920px and gets clipped
+     below ~960px. Turn the horizontal row into a clean vertical stepper. */
+  #solution [style*="min-width: 920px"]{
+    min-width: 0 !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 22px !important;
+  }
+  /* hide the horizontal connector line + moving flow dot (horizontal-only decor) */
+  #solution [style*="top: 33px"],
+  #solution [style*="top: 32px"]{ display: none !important; }
+  /* each node: full-width row, content centred */
+  #solution [style*="min-width: 920px"] > div[style*="text-align: center"]{
+    flex: none !important;
+    width: 100% !important;
+  }
 }
 
 /* -------------------- MOBILE  (≤ 600px) -------------------- */
